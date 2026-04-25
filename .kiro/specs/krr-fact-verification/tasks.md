@@ -19,7 +19,7 @@ Implement the Attribution-Aware KRR Fact Verification System in Python 3.10+. Ta
   - Enforce normalization invariant: all `Triple` fields must be lowercase and stripped
   - _Requirements: 3.1, 3.4, 4.1, 4.5, 5.1–5.7, 6.1, 7.1, 8.1_
 
-  - [ ]* 2.2 Write property test for Triple round-trip (Property 1)
+  - [ ] 2.2 Write property test for Triple round-trip (Property 1)
     - **Property 1: Triple round-trip consistency**
     - For any valid `Triple`, `Triple.from_canonical_string(t.to_canonical_string()) == t`
     - Use `hypothesis` to generate arbitrary normalized (lowercase, stripped) subject/relation/object strings
@@ -102,7 +102,7 @@ Implement the Attribution-Aware KRR Fact Verification System in Python 3.10+. Ta
   - Implement `KnowledgeGraph.to_dict()` and `KnowledgeGraph.from_dict()` using the JSON format from design section 4.4
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ]* 7.2 Write property test for KnowledgeGraph round-trip (Property 2)
+  - [ ] 7.2 Write property test for KnowledgeGraph round-trip (Property 2)
     - **Property 2: KnowledgeGraph JSON round-trip**
     - For any valid `KnowledgeGraph`, `KnowledgeGraph.from_dict(kg.to_dict())` produces an equivalent graph (same triples in same namespaces)
     - Use `hypothesis` to generate arbitrary sets of normalized triples across `"claim"` and `"evidence"` namespaces
@@ -132,7 +132,7 @@ Implement the Attribution-Aware KRR Fact Verification System in Python 3.10+. Ta
     - Test attribution list contains exactly the triples that drove the verdict
     - _Requirements: 5.1–5.9, 11.2_
 
-- [x] 9. Checkpoint — core modules complete
+- [ ] 9. Checkpoint — core modules complete
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 10. Implement `KRRPipeline` (`pipeline/krr.py`)
@@ -142,7 +142,7 @@ Implement the Attribution-Aware KRR Fact Verification System in Python 3.10+. Ta
   - Implement JSON output to `config.json_output_path` (append per-claim dict) and human-readable stdout output
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 10.1, 10.2, 10.3_
 
-  - [ ]* 10.2 Write unit tests for `KRRPipeline`
+  - [ ] 10.2 Write unit tests for `KRRPipeline`
     - Test end-to-end run with mock `Retriever`, `TripleExtractor`, and `ReasoningModule`
     - Test that a stage exception returns `NOT ENOUGH INFO` with `error` field set
     - Test that two consecutive `run()` calls do not share state
@@ -158,7 +158,7 @@ Implement the Attribution-Aware KRR Fact Verification System in Python 3.10+. Ta
   - [x] 11.2 Implement `BaselinePipeline.run()`: retrieve evidence using the shared `Retriever`, build the prompt from design section 4.6, call `llm_backend.classify()`, parse the verdict by searching for `SUPPORTS`/`REFUTES`/`NOT ENOUGH INFO` (case-insensitive), fall back to `NOT ENOUGH INFO` with a warning on unrecognized response or API failure
   - _Requirements: 7.1, 7.2, 7.3, 7.5, 7.6_
 
-  - [ ]* 11.3 Write unit tests for `BaselinePipeline`
+  - [ ] 11.3 Write unit tests for `BaselinePipeline`
     - Test with `MockLLM` returning each valid verdict label
     - Test that an unrecognized LLM response maps to `NOT ENOUGH INFO` and logs a warning
     - Test that an LLM exception returns `NOT ENOUGH INFO` with `error` field set
@@ -172,7 +172,7 @@ Implement the Attribution-Aware KRR Fact Verification System in Python 3.10+. Ta
   - Implement `Evaluator.save_report()` writing the formatted comparison table to the configured file path and printing to stdout
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-  - [ ]* 12.2 Write unit tests for `Evaluator`
+  - [ ] 12.2 Write unit tests for `Evaluator`
     - Test accuracy and F1 computation against a known ground-truth/prediction fixture
     - Test that an invalid verdict is treated as incorrect and a warning is logged
     - Test `save_report` writes the file and prints to stdout

@@ -1,20 +1,35 @@
 """Configuration management for the KRR Fact Verification System.
 
-Loads all settings from a .env file and/or OS environment variables.
-Environment variables take precedence over .env file values.
+Loads all settings from OS environment variables.  Call :func:`load_env_file`
+(or use ``python-dotenv`` directly) before :meth:`Config.from_env` to populate
+the environment from a ``.env`` file.  OS environment variables always take
+precedence over ``.env`` file values.
 """
 
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
-
-from dotenv import load_dotenv
 
 
 class ConfigError(Exception):
     """Raised when a required configuration key is missing or invalid."""
+
+
+def load_env_file(env_file: str = ".env", override: bool = False) -> None:
+    """Populate ``os.environ`` from *env_file* using ``python-dotenv``.
+
+    Args:
+        env_file: Path to the ``.env`` file (default: ``".env"``).
+        override: When ``True``, values in the file override existing env vars.
+                  Defaults to ``False`` so OS env vars take precedence.
+    """
+    try:
+        from dotenv import load_dotenv  # type: ignore[import]
+    except ImportError:
+        return  # python-dotenv not installed; silently skip
+    load_dotenv(env_file, override=override)
 
 
 @dataclass
@@ -44,12 +59,18 @@ class Config:
 
     @classmethod
     def from_env(cls, env_file: str = ".env") -> "Config":
-        """Load configuration from a .env file and OS environment variables.
+        """Load configuration from OS environment variables.
 
-        OS environment variables take precedence over values in the .env file.
+        Call :func:`load_env_file` (or ``python-dotenv``'s ``load_dotenv``)
+        before this method to populate ``os.environ`` from a ``.env`` file.
+        This method reads *only* from ``os.environ`` so that test patches using
+        ``patch.dict(os.environ, ..., clear=True)`` are fully respected.
+
+        The *env_file* parameter is accepted for API compatibility but is no
+        longer used to load the file inside this method.
 
         Args:
-            env_file: Path to the .env file (default: ".env").
+            env_file: Ignored (kept for backward compatibility).
 
         Returns:
             A fully populated :class:`Config` instance.
@@ -57,15 +78,13 @@ class Config:
         Raises:
             ConfigError: If any required configuration key is absent.
         """
-        # Load .env file without overriding existing OS env vars
-        load_dotenv(env_file, override=False)
-
-        # Validate required keys
         required_keys = [
             "FEVER_DATASET_PATH",
             "EVIDENCE_CORPUS_PATH",
             "EVAL_OUTPUT_PATH",
         ]
+
+        # Validate required keys
         for key in required_keys:
             if not os.environ.get(key):
                 raise ConfigError(f"Missing required configuration key: {key}")

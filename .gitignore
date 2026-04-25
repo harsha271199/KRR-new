@@ -40,10 +40,16 @@ coverage.xml
 .DS_Store
 Thumbs.db
 
-# Project outputs
-output/
-*.jsonl
-*.pkl
+# Project outputs (generated — do not commit)
+output/*.txt
+output/*.json
+output/*.jsonl
+output/*.csv
+output/figures/
+!output/figures/.gitkeep
 
 # spaCy models (downloaded separately)
 en_core_web_*/
+
+# Index files
+*.pkl

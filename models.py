@@ -115,14 +115,30 @@ class BaselineResult:
 
 @dataclass
 class EvaluationReport:
-    """Aggregated metrics for both pipelines."""
+    """Aggregated metrics for both pipelines.
+
+    Fields are ``None`` when the corresponding pipeline was not run.
+    """
 
     total_claims: int
     skipped_claims: int
-    label_distribution: dict[str, int]  # {"SUPPORTS": N, "REFUTES": N, "NOT ENOUGH INFO": N}
+    label_distribution: dict[str, int]
 
-    krr_accuracy: float
-    krr_f1: dict[str, float]        # per-label F1
+    # KRR metrics
+    krr_accuracy: float | None = None
+    krr_f1: dict[str, float] | None = None
+    krr_precision: dict[str, float] | None = None
+    krr_recall: dict[str, float] | None = None
+    krr_confusion: list[list[int]] | None = None
+    krr_predictions: list[str] | None = None
 
-    baseline_accuracy: float
-    baseline_f1: dict[str, float]   # per-label F1
+    # Baseline metrics
+    baseline_accuracy: float | None = None
+    baseline_f1: dict[str, float] | None = None
+    baseline_precision: dict[str, float] | None = None
+    baseline_recall: dict[str, float] | None = None
+    baseline_confusion: list[list[int]] | None = None
+    baseline_predictions: list[str] | None = None
+
+    # Ground truth (for error analysis)
+    ground_truth: list[str] | None = None
