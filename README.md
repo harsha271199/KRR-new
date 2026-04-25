@@ -1,6 +1,6 @@
 # KRR Fact Verification System
 
-[![Test Project](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/test.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/test.yml)
+[![Test Project](https://github.com/harsha271199/dard-e-Disco/actions/workflows/test.yml/badge.svg)](https://github.com/harsha271199/dard-e-Disco/actions/workflows/test.yml)
 
 > Attribution-aware fact verification using Knowledge Representation and Reasoning (KRR) — a master's group project comparing symbolic reasoning against a keyword-based baseline on the FEVER dataset.
 
