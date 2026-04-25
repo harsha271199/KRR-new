@@ -1,0 +1,20 @@
+=== Evaluation Report ===
+Total claims: 10 | Skipped: 0
+Label distribution: SUPPORTS=6, REFUTES=4, NOT ENOUGH INFO=0
+
+Pipeline          | Accuracy | F1-SUPPORTS | F1-REFUTES | F1-NEI  | Precision | Recall
+--------------------------------------------------------------------------------------
+KRR               |  0.900   |    1.000    |   0.857    |  0.000  |   0.667   | 0.583 
+Baseline RAG      |  0.700   |    0.800    |   0.400    |  0.000  |   0.556   | 0.417 
+
+Confusion Matrix — KRR:
+                         SUPPORTS    REFUTES        NEI
+  Actual SUPPORTS               6          0          0
+  Actual REFUTES                0          3          1
+  Actual NEI                    0          0          0
+
+Confusion Matrix — Baseline RAG:
+                         SUPPORTS    REFUTES        NEI
+  Actual SUPPORTS               6          0          0
+  Actual REFUTES                3          1          0
+  Actual NEI                    0          0          0
