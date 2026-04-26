@@ -1,76 +1,76 @@
 {
-  "total_claims": 10,
+  "total_claims": 6,
   "skipped_claims": 0,
   "label_distribution": {
-    "SUPPORTS": 6,
-    "REFUTES": 4,
-    "NOT ENOUGH INFO": 0
+    "SUPPORTS": 3,
+    "REFUTES": 2,
+    "NOT ENOUGH INFO": 1
   },
   "krr": {
-    "accuracy": 0.9,
+    "accuracy": 0.8333333333333334,
     "f1": {
-      "SUPPORTS": 1.0,
-      "REFUTES": 0.8571428571428571,
-      "NOT ENOUGH INFO": 0.0
+      "SUPPORTS": 0.8,
+      "REFUTES": 1.0,
+      "NOT ENOUGH INFO": 0.6666666666666666
     },
     "precision": {
       "SUPPORTS": 1.0,
       "REFUTES": 1.0,
-      "NOT ENOUGH INFO": 0.0
+      "NOT ENOUGH INFO": 0.5
     },
     "recall": {
-      "SUPPORTS": 1.0,
-      "REFUTES": 0.75,
-      "NOT ENOUGH INFO": 0.0
+      "SUPPORTS": 0.6666666666666666,
+      "REFUTES": 1.0,
+      "NOT ENOUGH INFO": 1.0
     },
     "confusion_matrix": [
       [
-        6,
+        2,
         0,
-        0
-      ],
-      [
-        0,
-        3,
         1
       ],
       [
         0,
-        0,
+        2,
         0
+      ],
+      [
+        0,
+        0,
+        1
       ]
     ]
   },
   "baseline": {
-    "accuracy": 0.7,
+    "accuracy": 0.6666666666666666,
     "f1": {
-      "SUPPORTS": 0.8,
-      "REFUTES": 0.4,
+      "SUPPORTS": 0.75,
+      "REFUTES": 0.6666666666666666,
       "NOT ENOUGH INFO": 0.0
     },
     "precision": {
-      "SUPPORTS": 0.6666666666666666,
+      "SUPPORTS": 0.6,
       "REFUTES": 1.0,
       "NOT ENOUGH INFO": 0.0
     },
     "recall": {
       "SUPPORTS": 1.0,
-      "REFUTES": 0.25,
+      "REFUTES": 0.5,
       "NOT ENOUGH INFO": 0.0
     },
     "confusion_matrix": [
       [
-        6,
+        3,
         0,
         0
       ],
       [
-        3,
+        1,
         1,
         0
       ],
       [
-        0,
+        1,
         0,
         0
       ]

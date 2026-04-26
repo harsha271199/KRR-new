@@ -45,6 +45,7 @@ class Config:
     eval_output_path: str
 
     # Optional fields with defaults
+    train_dataset_path: str | None = None   # path to training split (for corpus building)
     retrieval_top_k: int = 5
     retrieval_method: Literal["tfidf", "bm25"] = "tfidf"
     nlp_engine: Literal["spacy", "openie"] = "spacy"
@@ -112,6 +113,7 @@ class Config:
             fever_dataset_path=os.environ["FEVER_DATASET_PATH"],
             evidence_corpus_path=os.environ["EVIDENCE_CORPUS_PATH"],
             eval_output_path=os.environ["EVAL_OUTPUT_PATH"],
+            train_dataset_path=os.environ.get("TRAIN_DATASET_PATH") or None,
             retrieval_top_k=retrieval_top_k,
             retrieval_method=os.environ.get("RETRIEVAL_METHOD", "tfidf"),  # type: ignore[arg-type]
             nlp_engine=os.environ.get("NLP_ENGINE", "spacy"),  # type: ignore[arg-type]

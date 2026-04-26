@@ -115,7 +115,15 @@ def strip_negation(obj: str) -> str:
 
 def is_weak_object(obj: str) -> bool:
     """Return True if *obj* is a measurement/context phrase that carries no
-    semantic content for fact-checking purposes."""
+    semantic content for fact-checking purposes.
+
+    Objects that contain numeric values are never considered weak — they may
+    carry quantitative information needed for comparative reasoning.
+    """
+    import re as _re
+    # If the object contains a digit, it may carry numeric information
+    if _re.search(r"\d", obj):
+        return False
     obj_lower = obj.lower().strip()
     return any(p.search(obj_lower) for p in _WEAK_OBJECT_PATTERNS)
 

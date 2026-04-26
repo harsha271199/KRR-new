@@ -58,9 +58,13 @@ class TestRetrieverTFIDF:
         assert "Einstein" in results[0]
 
     def test_all_zero_scores_returns_empty_with_warning(self, caplog):
-        cfg = _make_config(retrieval_top_k=3)
+        # Force pure TF-IDF so that a nonsense query produces all-zero scores
+        cfg = _make_config(retrieval_top_k=3, retrieval_method="tfidf")
         r = Retriever(cfg)
         r.build_index(SMALL_CORPUS)
+        # Patch out the embedding model so hybrid is not triggered
+        r._embed_model = None
+        r._embeddings = None
         with caplog.at_level(logging.WARNING):
             results = r.retrieve("xyzzy quux frobnicator zap")
         assert results == []
@@ -99,13 +103,20 @@ class TestRetrieverPersistence:
         tmp = tempfile.NamedTemporaryFile(suffix=".pkl", delete=False)
         tmp.close()
         try:
-            cfg = _make_config(retrieval_top_k=2, index_path=tmp.name)
+            # Force pure TF-IDF for deterministic persistence test
+            cfg = _make_config(retrieval_top_k=2, index_path=tmp.name,
+                               retrieval_method="tfidf")
             r1 = Retriever(cfg)
             r1.build_index(SMALL_CORPUS)
+            # Disable hybrid so results are purely TF-IDF
+            r1._embed_model = None
+            r1._embeddings = None
             original = r1.retrieve("Einstein born Ulm", top_k=2)
 
             r2 = Retriever(cfg)
             r2.load_index()
+            r2._embed_model = None
+            r2._embeddings = None
             reloaded = r2.retrieve("Einstein born Ulm", top_k=2)
 
             assert original == reloaded

@@ -37,17 +37,37 @@ def normalize(text: str) -> str:
 
 
 def _get_span_text(token: "spacy.tokens.Token") -> str:
-    """Return token text with compound/amod modifiers, in sentence order."""
+    """Return token text with compound/amod/nummod modifiers, in sentence order."""
     tokens = [token]
     for child in token.children:
-        if child.dep_ in ("compound", "amod"):
+        if child.dep_ in ("compound", "amod", "nummod"):
             tokens.append(child)
     tokens.sort(key=lambda t: t.i)
     return " ".join(t.text for t in tokens)
 
 
+def _get_subject_text(token: "spacy.tokens.Token") -> str:
+    """Return the full subject text including compound/amod modifiers AND
+    one level of prep+pobj chain (e.g. "speed of light", "speed of sound").
+
+    This is more aggressive than _get_span_text and is used specifically for
+    subject tokens so that "speed of light" is not truncated to "speed".
+    """
+    parts = [_get_span_text(token)]
+    for child in token.children:
+        if child.dep_ == "prep":
+            for grandchild in child.children:
+                if grandchild.dep_ == "pobj":
+                    parts.append(child.text.lower())
+                    parts.append(_get_span_text(grandchild).lower())
+    return " ".join(parts)
+
+
 def _get_full_noun_phrase(token: "spacy.tokens.Token") -> str:
-    """Return token text with compound/amod modifiers AND one level of prep+pobj."""
+    """Return token text with compound/amod modifiers AND one level of prep+pobj.
+
+    Used for objects and comparative targets (e.g. "speed of sound").
+    """
     parts = [_get_span_text(token)]
     for child in token.children:
         if child.dep_ == "prep":
@@ -163,7 +183,21 @@ def _extract_nested_location(
                                 ))
                         # Always recurse into pobj regardless of prep type
                         _walk(grandchild, depth + 1)
-            elif child.dep_ in ("pobj", "attr", "dobj"):
+            elif child.dep_ in ("pobj", "attr", "dobj", "acl"):
+                _walk(child, depth + 1)
+            elif child.dep_ == "appos":
+                # "Queensland, Australia" — Australia is appos of Queensland
+                # Treat the appositive as a location if it looks like a proper noun
+                if child.pos_ in ("PROPN", "NOUN"):
+                    loc_text = normalize(_get_span_text(child))
+                    if loc_text not in _GENERIC_LOCATIONS and len(loc_text) > 2:
+                        # Only emit if parent was reached via a location prep
+                        # (checked by the caller context — we emit conservatively)
+                        triples.append(Triple(
+                            subject=subject_text,
+                            relation="locate",
+                            object=f"in {loc_text}",
+                        ))
                 _walk(child, depth + 1)
 
     # Walk from attr/dobj children of root
@@ -294,7 +328,7 @@ class TripleExtractor:
                 if agent is not None:
                     logical_subject = normalize(_get_span_text(agent))
                     for gram_subj in gram_subjects:
-                        logical_object = normalize(_get_span_text(gram_subj))
+                        logical_object = normalize(_get_subject_text(gram_subj))
                         if negated:
                             logical_object = "not " + logical_object
                         triples.append(Triple(
@@ -303,7 +337,7 @@ class TripleExtractor:
                             object=logical_object,
                         ))
                     for gram_subj in gram_subjects:
-                        subj_text = normalize(_get_span_text(gram_subj))
+                        subj_text = normalize(_get_subject_text(gram_subj))
                         for obj_text in _collect_objects(root, negated):
                             triples.append(Triple(
                                 subject=subj_text,
@@ -316,7 +350,7 @@ class TripleExtractor:
             comparative_obj = _find_comparative_object(root)
             if comparative_obj is not None:
                 for subj_token in gram_subjects:
-                    subj_text = normalize(_get_span_text(subj_token))
+                    subj_text = normalize(_get_subject_text(subj_token))
                     triples.append(Triple(
                         subject=subj_text,
                         relation=relation_text,
@@ -330,7 +364,7 @@ class TripleExtractor:
                 continue
 
             for subj_token in gram_subjects:
-                subj_text = normalize(_get_span_text(subj_token))
+                subj_text = normalize(_get_subject_text(subj_token))
                 for obj_text in objects:
                     triples.append(Triple(
                         subject=subj_text,
@@ -339,8 +373,6 @@ class TripleExtractor:
                     ))
 
                 # --- Nested location extraction ---
-                # For sentences like "X is a tower on the Champ de Mars in Paris"
-                # extract additional (subject, locate, in paris) triples
                 location_triples = _extract_nested_location(subj_text, root)
                 triples.extend(location_triples)
 

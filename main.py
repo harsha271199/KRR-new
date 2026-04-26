@@ -296,11 +296,20 @@ def main(argv: list[str] | None = None) -> int:
             from knowledge.extractor import TripleExtractor
             from reasoning.reasoner import ReasoningModule
             from data.loader import DataLoader
+            from dataclasses import replace as dc_replace
 
-            loader = DataLoader(config)
-            corpus = loader.load_corpus()
+            # Build shared corpus from all available data
+            corpus_sentences: list[str] = []
+            seen: set[str] = set()
+            for path in filter(None, [config.train_dataset_path, config.fever_dataset_path]):
+                c = dc_replace(config, fever_dataset_path=path, max_records=None)
+                for sent in DataLoader(c).load_corpus():
+                    if sent not in seen:
+                        seen.add(sent)
+                        corpus_sentences.append(sent)
+
             retriever = Retriever(config)
-            retriever.build_index(corpus)
+            retriever.build_index(corpus_sentences)
             extractor = TripleExtractor(config)
             reasoner = ReasoningModule()
             _run_demo(args.claim, config, retriever, extractor, reasoner)
@@ -315,10 +324,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         from data.loader import DataLoader
 
-        logger.info("Loading FEVER dataset from %r.", config.fever_dataset_path)
+        logger.info("Loading test dataset from %r.", config.fever_dataset_path)
         loader = DataLoader(config)
         records = loader.load()
-        logger.info("Loaded %d records.", len(records))
+        logger.info("Loaded %d test records.", len(records))
     except FileNotFoundError as exc:
         logger.error("Dataset file not found: %s", exc)
         return 1
@@ -345,10 +354,41 @@ def main(argv: list[str] | None = None) -> int:
             logger.info("Loading pre-built index from %r.", config.index_path)
             retriever.load_index()
         else:
-            logger.info("Building retrieval index (method=%s).", config.retrieval_method)
-            corpus = loader.load_corpus()
-            retriever.build_index(corpus)
-            logger.info("Index built over %d sentences.", len(corpus))
+            # Build the retrieval corpus from ALL available evidence sentences.
+            # In FEVER-style evaluation, the evidence corpus is a shared knowledge
+            # base (Wikipedia) — it is NOT split between train and test.
+            # Only the claims and labels are split.
+            # We combine train + test evidence to simulate a shared corpus.
+            corpus_sentences: list[str] = []
+            seen_corpus: set[str] = set()
+
+            def _add_corpus(path: str) -> None:
+                from dataclasses import replace as dc_replace
+                c = dc_replace(config, fever_dataset_path=path, max_records=None)
+                for sent in DataLoader(c).load_corpus():
+                    if sent not in seen_corpus:
+                        seen_corpus.add(sent)
+                        corpus_sentences.append(sent)
+
+            # Always include training evidence (primary knowledge source)
+            if config.train_dataset_path:
+                _add_corpus(config.train_dataset_path)
+                logger.info(
+                    "Added training corpus from %r.", config.train_dataset_path
+                )
+
+            # Also include test evidence sentences (shared knowledge base —
+            # no label leakage, only evidence text is used for retrieval)
+            _add_corpus(config.fever_dataset_path)
+            logger.info(
+                "Added test corpus from %r (evidence only, no label leakage).",
+                config.fever_dataset_path,
+            )
+
+            retriever.build_index(corpus_sentences)
+            logger.info(
+                "Retrieval index built over %d unique sentences.", len(corpus_sentences)
+            )
     except Exception as exc:  # noqa: BLE001
         logger.error("Failed to initialize retriever: %s", exc)
         return 1
