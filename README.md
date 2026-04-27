@@ -143,7 +143,7 @@ When evidence contains conflicting information (e.g., "located in Coral Sea" vs 
 If the retriever fails to find relevant evidence, the reasoning module has no signal to work with. Retrieval is the primary bottleneck for system performance.
 
 ### 4. Small Dataset
-6 test claims is insufficient for statistically robust evaluation. Results should be validated on the full FEVER dev set (19,998 claims).
+Although the test set was expanded to 15 balanced claims, it is still a small FEVER-style subset. The results are suitable for demonstrating the KRR pipeline, but future work should validate the system on larger FEVER dev/test subsets.
 
 ---
 
@@ -198,7 +198,7 @@ This project demonstrates that **Knowledge Representation and Reasoning (KRR) im
 - **KRR outperforms the baseline** by 53.3 percentage points on test accuracy (0.933 vs 0.400)
 - **Structured reasoning provides transparency**: Every prediction includes attribution to specific evidence triples
 - **Retrieval quality is the key factor**: Hybrid semantic retrieval is critical for finding relevant evidence
-- **Balanced evaluation**: A 15-claim test set with equal class distribution (5/5/5) provides statistically reliable metrics
+- **Balanced evaluation**: A 15-claim balanced test set provides a more stable and representative evaluation than the earlier 6-claim version, while remaining suitable for demonstration-scale analysis.
 
 The symbolic approach offers a viable alternative to black-box neural models, especially in domains where explainability and auditability are required.
 
