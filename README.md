@@ -24,7 +24,7 @@ This project implements a **Knowledge Representation and Reasoning (KRR)** appro
 
 The KRR pipeline follows a clear four-stage process:
 
-```
+```text
 Claim → Retrieval → Triple Extraction → Reasoning → Prediction
 ```
 
@@ -40,26 +40,26 @@ Claim → Retrieval → Triple Extraction → Reasoning → Prediction
 - Extracts structured `(subject, relation, object)` triples from claims and evidence
 - Uses spaCy dependency parsing to handle:
   - Active and passive voice
-  - Negation ("not visible")
-  - Comparative claims ("slower than")
-  - Full subject extraction ("speed of light" not truncated to "speed")
-  - Nested location phrases ("tower in Paris")
+  - Negation (`not visible`)
+  - Comparative claims (`slower than`)
+  - Full subject extraction (`speed of light`, not truncated to `speed`)
+  - Nested location phrases (`tower in Paris`)
 
 ### 3. Reasoning: Support/Refute Counting
 
 - Compares claim triples against evidence triples symbolically
 - **Relation normalization**: Maps similar relations (`become → be`, `locate → be`)
-- **Subject alias matching**: Handles name variations ("Shakespeare" ↔ "William Shakespeare")
+- **Subject alias matching**: Handles name variations (`Shakespeare ↔ William Shakespeare`)
 - **Negation-aware matching**: Detects contradictions via negation polarity
-- **Synonym canonicalization**: Treats "tallest" and "highest" as equivalent
-- **Numeric comparative reasoning**: Resolves claims like "X is slower than Y" by extracting and comparing numeric values
+- **Synonym canonicalization**: Treats `tallest` and `highest` as equivalent
+- **Numeric comparative reasoning**: Resolves claims like `X is slower than Y` by extracting and comparing numeric values
 - Counts supporting and refuting evidence triples
 
 ### 4. Prediction
 
 - **SUPPORTS**: More supporting evidence than refuting
 - **REFUTES**: More refuting evidence than supporting
-- **NOT ENOUGH INFO**: Tie (equal support/refute) or no matching triples found
+- **NOT ENOUGH INFO**: Tie, equal support/refute, or no matching triples found
 
 ---
 
@@ -67,7 +67,7 @@ Claim → Retrieval → Triple Extraction → Reasoning → Prediction
 
 ### FEVER-Style Format
 
-The dataset follows the FEVER (Fact Extraction and VERification) format with three label types:
+The dataset follows the FEVER, Fact Extraction and VERification, format with three label types:
 
 - **SUPPORTS**: Evidence confirms the claim
 - **REFUTES**: Evidence contradicts the claim
@@ -76,15 +76,15 @@ The dataset follows the FEVER (Fact Extraction and VERification) format with thr
 ### Train/Test Split
 
 | Split | File | Claims | SUPPORTS | REFUTES | NEI |
-|-------|------|--------|----------|---------|-----|
+|---|---|---:|---:|---:|---:|
 | Train | `data/train.jsonl` | 30 | 12 | 10 | 8 |
 | Test | `data/test.jsonl` | 15 | 5 | 5 | 5 |
 
-**Evaluation is performed on unseen test data (no data leakage).**
+**Evaluation is performed on unseen test data with no data leakage.**
 
-The test set is **perfectly balanced** across all three label classes (5 each), which eliminates class-imbalance bias from the evaluation metrics. Reasoning rules and synonym tables were developed using the training split only. Test labels are never seen during development and are used exclusively for final evaluation.
+The test set is **perfectly balanced** across all three label classes, with five examples per class. This removes class-imbalance bias from the evaluation metrics. Reasoning rules and synonym tables were developed using the training split only. Test labels are used exclusively for final evaluation.
 
-A larger, balanced dataset improves evaluation stability — metrics computed over 15 balanced claims are more reliable than those over 6 imbalanced claims.
+A larger, balanced dataset improves evaluation stability. Metrics computed over 15 balanced claims are more reliable than metrics computed over the earlier 6-claim version.
 
 ---
 
@@ -93,72 +93,70 @@ A larger, balanced dataset improves evaluation stability — metrics computed ov
 ### Performance Metrics
 
 | Pipeline | Accuracy | F1-SUPPORTS | F1-REFUTES | F1-NEI |
-|----------|----------|-------------|------------|--------|
+|---|---:|---:|---:|---:|
 | **KRR** | **0.933** | **0.889** | **1.000** | **0.909** |
 | Baseline | 0.400 | 0.526 | 0.333 | 0.000 |
 
 ### Key Findings
 
-- **KRR outperforms baseline by ~53.3%** (0.933 vs 0.400 accuracy)
-- **Perfect refutation detection**: KRR achieves F1-REFUTES = 1.000 — all 5 REFUTES claims correctly identified
-- **Strong NEI handling**: KRR achieves F1-NEI = 0.909, while baseline never predicts NEI (F1 = 0.000)
-- **Balanced evaluation**: Results computed over a perfectly balanced test set (5 SUPPORTS / 5 REFUTES / 5 NEI), eliminating class-imbalance bias
-- **Better precision**: KRR avoids over-predicting SUPPORTS, which is the baseline's primary failure mode
+- **KRR outperforms the baseline by 53.3 percentage points** in accuracy, from 0.400 to 0.933.
+- **Perfect refutation detection**: KRR achieves F1-REFUTES = 1.000.
+- **Strong NEI handling**: KRR achieves F1-NEI = 0.909, while the baseline never predicts NEI.
+- **Balanced evaluation**: Results are computed on a balanced test set with 5 SUPPORTS, 5 REFUTES, and 5 NEI claims.
+- **Better precision**: KRR avoids the baseline's main failure mode, which is over-predicting SUPPORTS.
 
 ### Why KRR Performs Better
 
-- **Semantic retrieval**: Hybrid TF-IDF + sentence embeddings retrieve correct evidence even with vocabulary mismatch
-- **Structured reasoning**: Symbolic triple comparison provides more reliable signal than keyword matching
-- **Negation awareness**: Explicit negation handling correctly identifies contradictions
-- **Abstention capability**: Tie-breaking rule allows the system to predict NOT ENOUGH INFO when evidence is ambiguous
+- **Semantic retrieval** retrieves correct evidence even when claim and evidence use different vocabulary.
+- **Structured reasoning** compares symbolic triples instead of relying only on keyword overlap.
+- **Negation awareness** explicitly detects contradictions.
+- **Abstention capability** allows the system to predict NOT ENOUGH INFO when evidence is ambiguous.
 
 ---
 
 ## Key Improvements
 
-The following enhancements were implemented to achieve the reported performance:
-
 ### 1. Hybrid Semantic Retrieval
 
-- Combined TF-IDF (lexical) with sentence-transformers (semantic)
-- 70% weight on semantic similarity for better vocabulary-independent matching
-- Retrieves correct evidence even when claim and evidence use different words
+- Combined TF-IDF lexical matching with sentence-transformer semantic retrieval
+- Uses 70% weight on semantic similarity for better vocabulary-independent matching
+- Improves evidence retrieval when the claim and evidence use different wording
 
 ### 2. Improved Subject Extraction
 
 - Extended subject extraction to include prepositional chains
-- Example: "speed of light" (not truncated to "speed")
-- Critical for distinguishing similar entities in comparative claims
+- Example: `speed of light` is preserved instead of being truncated to `speed`
+- Critical for comparative claims involving similar entities
 
 ### 3. Numeric Reasoning for Comparative Claims
 
-- Dedicated resolver for comparative claims ("X is slower than Y")
-- Extracts numeric values from evidence (e.g., 299,792,458 m/s vs 343 m/s)
-- Compares values to determine support/refute verdict
+- Adds a dedicated resolver for comparative claims such as `X is slower than Y`
+- Extracts numeric evidence values, such as `299,792,458 m/s` and `343 m/s`
+- Compares values directly to determine support or refutation
 
 ### 4. Improved NOT ENOUGH INFO Handling
 
-- Weak-evidence filter exempts numeric values
-- Tie-breaking rule: equal support and refute counts → NOT ENOUGH INFO
-- System correctly abstains when evidence is ambiguous
+- Uses weak-evidence filtering
+- Allows ties to map to NOT ENOUGH INFO
+- Correctly abstains when evidence is ambiguous or insufficient
 
 ---
 
 ## Limitations
 
-### 1. Ambiguous Evidence → NOT ENOUGH INFO
+### 1. Ambiguous Evidence
 
-When evidence contains conflicting information (e.g., "located in Coral Sea" vs "located in Australia"), the system abstains but cannot resolve the ambiguity without geographic inference.
+When evidence contains conflicting location information, such as `located in Coral Sea` and `located in Australia`, the system may abstain because it does not have geographic world knowledge.
 
 ### 2. Symbolic Reasoning Limitations
 
 - No multi-hop reasoning across multiple sentences
-- No coreference resolution (pronouns like "it" are not resolved)
-- Cannot perform inference over implicit world knowledge
+- No full coreference resolution for pronouns such as `it`
+- Cannot infer implicit world knowledge without explicit evidence
 
 ### 3. Dependence on Retrieval Quality
 
-If the retriever fails to find relevant evidence, the reasoning module has no signal to work with. Retrieval is the primary bottleneck for system performance.
+If the retriever fails to find relevant evidence, the reasoning module has no reliable signal. Retrieval quality remains the main bottleneck for system performance.
 
 ### 4. Small Dataset
 
@@ -174,7 +172,7 @@ Although the test set was expanded to 15 balanced claims, it is still a small FE
 .\venv\Scripts\python.exe -m pytest tests/ --tb=short -q
 ```
 
-### Run Full Evaluation (Both Pipelines)
+### Run Full Evaluation
 
 ```powershell
 .\venv\Scripts\python.exe main.py --pipeline both
@@ -202,27 +200,25 @@ Although the test set was expanded to 15 balanced claims, it is still a small FE
 
 ## Outputs
 
-The system generates the following output files:
-
 | File | Description |
-|------|-------------|
-| `output/metrics.json` | Machine-readable metrics (accuracy, F1, precision, recall, confusion matrix) |
+|---|---|
+| `output/metrics.json` | Machine-readable metrics including accuracy, F1, precision, recall, and confusion matrix |
 | `output/eval_report.txt` | Human-readable evaluation report with confusion matrices |
 | `output/confusion_matrix.csv` | Confusion matrices for both pipelines in CSV format |
 | `output/krr_results.jsonl` | Per-claim KRR output with triples, counts, verdict, and attribution |
 | `output/error_analysis.md` | Per-error breakdown with root-cause analysis |
-| `output/figures/` | Visualization graphs (accuracy, F1 scores, confusion matrices, error breakdown) |
+| `output/figures/` | Visualization graphs for accuracy, F1 scores, confusion matrices, and error breakdown |
 
 ---
 
 ## Conclusion
 
-This project demonstrates that **Knowledge Representation and Reasoning (KRR) improves both interpretability and performance** for fact verification tasks:
+This project demonstrates that **Knowledge Representation and Reasoning improves both interpretability and performance** for fact verification tasks.
 
-- **KRR outperforms the baseline** by 53.3 percentage points on test accuracy (0.933 vs 0.400)
-- **Structured reasoning provides transparency**: Every prediction includes attribution to specific evidence triples
-- **Retrieval quality is the key factor**: Hybrid semantic retrieval is critical for finding relevant evidence
-- **Balanced evaluation**: A 15-claim balanced test set provides a more stable and representative evaluation than the earlier 6-claim version, while remaining suitable for demonstration-scale analysis.
+- **KRR outperforms the baseline** by 53.3 percentage points in test accuracy.
+- **Structured reasoning provides transparency** because every prediction includes attribution to evidence triples.
+- **Hybrid semantic retrieval is critical** for finding relevant evidence.
+- **Balanced evaluation** using 15 test claims provides a more stable and representative evaluation than the earlier 6-claim version, while remaining suitable for demonstration-scale analysis.
 
 The symbolic approach offers a viable alternative to black-box neural models, especially in domains where explainability and auditability are required.
 
