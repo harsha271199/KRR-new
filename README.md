@@ -1,6 +1,6 @@
 # KRR Fact Verification System
 
-[![Test Project](https://github.com/harsha271199/dard-e-Disco/actions/workflows/test.yml/badge.svg)](https://github.com/harsha271199/dard-e-Disco/actions/workflows/test.yml)
+[![Test Project](https://github.com/harsha271199/KRR-new/actions/workflows/test.yml/badge.svg)](https://github.com/harsha271199/KRR-new/actions/workflows/test.yml)
 
 ---
 
