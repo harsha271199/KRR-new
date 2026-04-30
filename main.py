@@ -363,12 +363,17 @@ def main(argv: list[str] | None = None) -> int:
             seen_corpus: set[str] = set()
 
             def _add_corpus(path: str) -> None:
-                from dataclasses import replace as dc_replace
-                c = dc_replace(config, fever_dataset_path=path, max_records=None)
-                for sent in DataLoader(c).load_corpus():
-                    if sent not in seen_corpus:
-                        seen_corpus.add(sent)
-                        corpus_sentences.append(sent)
+                import json
+                with open(path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        obj = json.loads(line)
+            
+                        texts = obj.get("evidence_text", [])  # ✅ FIX
+            
+                        for t in texts:
+                            if t and t not in seen_corpus:
+                                seen_corpus.add(t)
+                                corpus_sentences.append(t)
 
             # Always include training evidence (primary knowledge source)
             if config.train_dataset_path:
